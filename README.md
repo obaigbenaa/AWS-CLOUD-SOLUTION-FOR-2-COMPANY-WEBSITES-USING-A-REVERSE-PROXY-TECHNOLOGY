@@ -133,3 +133,271 @@ Amazon Elastic File System (Amazon EFS) provides a simple, scalable, fully manag
 ![Alt text](1.efs-create-accesspoint2.png)
 
 ![Alt text](1.efs-create-accesspoint3.png)
+
+
+#### Setup Relational Databaser Service
+* ##### Pre-requisite. ~ Create a KMS key from Key Management Service (KMS) to be used to encrypt the database instance.
+
+![Alt text](1.kms-create.png) 
+
+![Alt text](1.kms-create1.png) 
+
+![Alt text](1.kms-create2.png)
+
+
+Amazon Relational Database Service (Amazon RDS) is a managed distributed relational database service by Amazon Web Services. This web service running in the cloud designed to simplify setup, operations, maintenans & scaling of relational databases. Without RDS, Database Administrators (DBA) have more work to do, due to RDS, some DBAs have become jobless
+
+To ensure that yout databases are highly available and also have failover support in case one availability zone fails, we will configure a multi-AZ set up of RDS MySQL database instance. In our case, since we are only using 2 AZs, we can only failover to one, but the same concept applies to 3 Availability Zones. We will not consider possible failure of the whole Region, but for this AWS also has a solution – this is a more advanced concept that will be discussed in following projects.
+
+To configure RDS, follow steps below:
+
+1. Create a subnet group and add 2 private subnets (data Layer)
+![Alt text](1.subnet-group.png) 
+
+![Alt text](1.subnet-group1.png)
+
+2. Create an RDS Instance for mysql 8.*.*
+
+3. To satisfy our architectural diagram, you will need to select either Dev/Test or Production Sample Template. But to minimize AWS cost, you can select the Do not create a standby instance option under Availability & durability sample template (The production template will enable Multi-AZ deployment)
+4. Configure other settings accordingly (For test purposes, most of the default settings are good to go). In the real world, you will need to size the database appropriately. You will need to get some information about the usage. If it is a highly transactional database that grows at 10GB weekly, you must bear that in mind while configuring the initial storage allocation, storage autoscaling, and maximum storage threshold.
+5. Configure VPC and security (ensure the database is not available from the Internet)
+6. Configure backups and retention
+7. Encrypt the database using the KMS key created earlier
+8. Enable CloudWatch monitoring and export Error and Slow Query logs (for production, also include Audit)
+
+![Alt text](1.database-ceate.png) 
+
+![Alt text](1.database-ceate1.png) 
+
+![Alt text](1.database-ceate3.png) 
+
+![Alt text](1.database-ceate4.png)
+
+![Alt text](1.database-ceate5.png)
+
+### Proceed With Creation of Compute Resources
+
+We will need to set up and configure compute resources inside our VPC.
+
+The recources related to compute are:
+
+EC2 Instances
+Launch Templates
+Target Groups
+Autoscaling Groups
+TLS Certificates
+Application Load Balancers (ALB)
+
+### Set Up Compute Resources for Bastion
+#### Provision EC2 Instances for Bastion
+
+Create an EC2 Instance based on RedHat (AMI) in any 2 Availability Zones (AZ) in any AWS Region (it is recommended to use the Region that is closest to your customers). Use EC2 instance of T2 family (e.g. t2.micro or similar)
+
+Ensure that it has the following software installed:
+
+python3, ntp, net-tools, vim, wget, telnet, epel-release, git, htop
+
+### Bastion ami installation
+
+login to the Bastion EC2 instance and change to super user
+
+```
+sudo su -
+```
+
+#### use code block below:
+-------------------------------------
+
+
+```
+subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
+
+dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+
+sudo dnf install https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+
+yum install wget vim python3 telnet htop git mysql net-tools chrony -y
+
+systemctl start chronyd
+
+systemctl enable chronyd
+
+```
+
+#### Create an AMI out of the Bastion EC2 instance
+
+![Alt text](1.ami-create-bastion.png)
+
+Go to navigation pane and check that thee AMI status is available
+
+### Set Up Compute Resources for Nginx
+Provision EC2 Instances for Nginx
+Create an EC2 Instance based on CentOS Amazon Machine Image (AMI) in any 2 Availability Zones (AZ) in any AWS Region (it is recommended to use the Region that is closest to your customers). Use EC2 instance of T2 family (e.g. t2.micro or similar)
+
+Ensure that it has the following software installed:
+
+python
+ntp
+net-tools
+vim
+wget
+telnet
+epel-release
+htop
+Create an AMI out of the EC2 instance
+
+## Nginx AMI installation 
+
+
+* #### login to the Nginx EC2 instance and change to super user
+
+```
+sudo su -
+```
+
+```
+subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
+
+dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+
+sudo dnf install https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+
+yum install wget vim python3 telnet htop git mysql net-tools chrony -y
+
+systemctl start chronyd
+
+systemctl enable chronyd
+
+```
+
+
+* #### configure selinux policies for the Nginx servers
+
+```
+setsebool -P httpd_can_network_connect=1
+setsebool -P httpd_can_network_connect_db=1
+setsebool -P httpd_execmem=1
+setsebool -P httpd_use_nfs 1
+
+```
+
+* #### Install amazon efs utils for mounting the target on the Elastic file system
+
+```
+git clone https://github.com/aws/efs-utils
+
+cd efs-utils
+
+yum install -y make
+
+yum install -y rpm-build
+
+make rpm 
+
+yum install -y  ./build/amazon-efs-utils*rpm
+
+```
+
+* #### seting up self-signed certificate for the NGINX  webserver instance
+
+```
+sudo mkdir /etc/ssl/private
+
+sudo chmod 700 /etc/ssl/private
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/alders.key -out /etc/ssl/certs/alders.crt
+
+sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+
+```
+## Webserver ami installation 
+
+* #### login to the Webserver EC2 instance and change to super user
+
+```
+sudo su -
+```
+
+```
+subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
+
+dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+
+sudo dnf install https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+
+yum install wget vim python3 telnet htop git mysql net-tools chrony -y
+
+systemctl start chronyd
+
+systemctl enable chronyd
+
+```
+
+#### configure selinux policies for the webservers 
+```
+setsebool -P httpd_can_network_connect=1
+setsebool -P httpd_can_network_connect_db=1
+setsebool -P httpd_execmem=1
+setsebool -P httpd_use_nfs 1
+```
+#### Install amazon efs utils for mounting the target on the Elastic file system
+
+```
+git clone https://github.com/aws/efs-utils
+
+cd efs-utils
+
+yum install -y make
+
+yum install -y rpm-build
+
+make rpm 
+
+yum install -y  ./build/amazon-efs-utils*rpm
+
+```
+#### set up self-signed certificate for the apache  webserver instance - (we will use APACHE to host our webserver)
+
+```
+yum install -y mod_ssl
+
+openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/alders.key -x509 -days 365 -out /etc/pki/tls/certs/alders.crt
+
+vi /etc/httpd/conf.d/ssl.conf
+
+```
+
+enter into the file and search for below: 
+
+~~ SSLCertificateFile /etc/pki/tls/certs/localhost.crt
+
+~~ SSLCertificateKeyFile /etc/pki/tls/private/localhost.key
+
+change localhost.crt and localhost.key and to your generated certificate and key name respectively
+
+esq:wq
+
+
+Prepare Launch Template For Nginx (One Per Subnet)
+Make use of the AMI to set up a launch template
+Ensure the Instances are launched into a public subnet
+Assign appropriate security group
+Configure Userdata to update yum package repository and install nginx
+Configure Target Groups
+Select Instances as the target type
+Ensure the protocol HTTPS on secure TLS port 443
+Ensure that the health check path is /healthstatus
+Register Nginx Instances as targets
+Ensure that health check passes for the target group
+Configure Autoscaling For Nginx
+Select the right launch template
+Select the VPC
+Select both public subnets
+Enable Application Load Balancer for the AutoScalingGroup (ASG)
+Select the target group you created before
+Ensure that you have health checks for both EC2 and ALB
+The desired capacity is 2
+Minimum capacity is 2
+Maximum capacity is 4
+Set scale out if CPU utilization reaches 90%
+Ensure there is an SNS topic to send scaling notifications
