@@ -236,14 +236,7 @@ Create an EC2 Instance based on CentOS Amazon Machine Image (AMI) in any 2 Avail
 
 Ensure that it has the following software installed:
 
-python
-ntp
-net-tools
-vim
-wget
-telnet
-epel-release
-htop
+python, ntp, net-tools, vim, wget, telnet, epel-release, htop
 Create an AMI out of the EC2 instance
 
 ## Nginx AMI installation 
@@ -310,6 +303,8 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/privat
 sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
 
 ```
+##### Create an AMI out of the Nginx EC2 instance
+
 ## Webserver ami installation 
 
 * #### login to the Webserver EC2 instance and change to super user
@@ -376,6 +371,103 @@ enter into the file and search for below:
 change localhost.crt and localhost.key and to your generated certificate and key name respectively
 
 esq:wq
+
+##### Create an AMI out of the Webserver EC2 instance
+
+![Alt text](1.ami-created.png)
+
+
+### Configure Target Groups
+1. Select Instances as the target type
+1. Ensure the protocol HTTPS on secure TLS port 443
+1. Ensure that the health check path is /healthstatus
+1. Register Nginx Instances as targets
+1. Ensure that health check passes for the target group
+
+![Alt text](1.target-grp-nginx.png)
+![Alt text](1.target-grp-nginx2.png)
+![Alt text](1.target-grp-nginx3.png)
+![Alt text](1.target-grp-created.png)
+
+
+### CONFIGURE APPLICATION LOAD BALANCER (ALB)
+#### Application Load Balancer To Route Traffic To NGINX
+
+Nginx EC2 Instances will have configurations that accepts incoming traffic only from Load Balancers. No request should go directly to Nginx servers. With this kind of setup, we will benefit from intelligent routing of requests from the ALB to Nginx servers across the 2 Availability Zones. We will also be able to offload SSL/TLS certificates on the ALB instead of Nginx. Therefore, Nginx will be able to perform faster since it will not require extra compute resources to valifate certificates for every request.
+
+#### Create an Internet facing (External) ALB
+* Ensure that it listens on HTTPS protocol (TCP port 443)
+* Ensure the ALB is created within the appropriate VPC, Availability Zone (AZ), and Subnets
+* Choose the Certificate from ACM
+* Select Security Group
+* Select Nginx Instances as the target group
+
+#### Create (Internal) Application Load Balancer To Route Traffic To Web Servers
+Since the webservers are configured for auto-scaling, there is going to be a problem if servers get dynamically scalled out or in. Nginx will not know about the new IP addresses, or the ones that get removed. Hence, Nginx will not know where to direct the traffic.
+
+To solve this problem, we must use a load balancer. But this time, it will be an internal load balancer. Not Internet facing since the webservers are within a private subnet, and we do not want direct access to them.
+
+* Create an Internal ALB
+* Ensure that it listens on HTTPS protocol (TCP port 443)
+* Ensure the ALB is created within the appropriate VPC, Availability Zone (AZ), and Subnets
+* Choose the Certificate from ACM
+* Select Security Group
+* Select webserver Instances as the target group
+* Ensure that health check passes for the target group - NOTE: This process must be repeated for both *WordPress* and *Tooling* websites.
+
+![Alt text](1.loadbalancer-create.png) 
+
+![Alt text](1.loadbalancer-create1.png)
+
+![Alt text](1.loadbalancer-create2.png) 
+
+![Alt text](1.loadbalancer-create3.png)
+
+Configure HTTPS listeners rule for Internal ALB
+
+![Alt text](1.add-rule-lb-listener.png) 
+
+![Alt text](1.add-rule-lb-listener1.png) 
+
+![Alt text](1.add-rule-lb-listener3.png) 
+
+![Alt text](1.add-rule-lb-listener4.png)
+
+![Alt text](1.add-rule-lb-listener-created.png)
+
+
+
+### Configure Target Groups
+1.Select Instances as the target type
+Ensure the protocol is TCP on port 22
+Register Bastion Instances as targets
+Ensure that health check passes for the target group
+Configure Autoscaling For Bastion
+Select the right launch template
+Select the VPC
+Select both public subnets
+Enable Application Load Balancer for the AutoScalingGroup (ASG)
+Select the target group you created before
+Ensure that you have health checks for both EC2 and ALB
+The desired capacity is 2
+Minimum capacity is 2
+Maximum capacity is 4
+Set scale out if CPU utilization reaches 90%
+Ensure there is an SNS topic to send scaling notifications
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 Prepare Launch Template For Nginx (One Per Subnet)
