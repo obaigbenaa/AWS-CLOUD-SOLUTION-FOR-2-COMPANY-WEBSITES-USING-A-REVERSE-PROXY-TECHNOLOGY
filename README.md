@@ -435,53 +435,66 @@ Configure HTTPS listeners rule for Internal ALB
 
 ![Alt text](1.add-rule-lb-listener-created.png)
 
+### NGINX
+____
 
+### Prepare Launch Template For Nginx (One Per Subnet)
+1. Make use of the AMI to set up a launch template
+1. Ensure the Instances are launched into a public subnet
+1. Assign appropriate security group
+1. Configure Userdata to update yum package repository and install nginx. 
+See [Nginx userdata](https://github.com/obaigbenaa/ALDERS-project-config/blob/main/nginx-userdata.md)
+
+![Alt text](1.launch-template-create.png) 
+
+![Alt text](1.launch-template-create1.png) 
+
+![Alt text](1.launch-template-create2.png)
+
+
+### Configure Target Groups
+Select Instances as the target type
+Ensure the protocol HTTPS on secure TLS port 443
+Ensure that the health check path is /healthstatus
+Register Nginx Instances as targets
+Ensure that health check passes for the target group
+
+
+### Configure Autoscaling For Nginx
+Select the right launch template
+Select the VPC
+Select both public subnets
+Enable Application Load Balancer for the AutoScalingGroup (ASG)
+Select the target group you created before
+Ensure that you have health checks for both EC2 and ALB
+The desired capacity is 2
+Minimum capacity is 2
+Maximum capacity is 4
+Set scale out if CPU utilization reaches 90%
+Ensure there is an SNS topic to send scaling notifications
+
+### BASTION 
+_____
+
+### Prepare Launch Template For Bastion (One per subnet)
+Make use of the AMI to set up a launch template
+Ensure the Instances are launched into a public subnet
+Assign appropriate security group
+Configure Userdata to update yum package repository and install Ansible and git
 
 ### Configure Target Groups
 1.Select Instances as the target type
 Ensure the protocol is TCP on port 22
 Register Bastion Instances as targets
 Ensure that health check passes for the target group
-Configure Autoscaling For Bastion
-Select the right launch template
-Select the VPC
-Select both public subnets
-Enable Application Load Balancer for the AutoScalingGroup (ASG)
-Select the target group you created before
-Ensure that you have health checks for both EC2 and ALB
-The desired capacity is 2
-Minimum capacity is 2
-Maximum capacity is 4
-Set scale out if CPU utilization reaches 90%
-Ensure there is an SNS topic to send scaling notifications
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Prepare Launch Template For Nginx (One Per Subnet)
-Make use of the AMI to set up a launch template
-Ensure the Instances are launched into a public subnet
-Assign appropriate security group
-Configure Userdata to update yum package repository and install nginx
-Configure Target Groups
+### Configure Target Groups
 Select Instances as the target type
-Ensure the protocol HTTPS on secure TLS port 443
-Ensure that the health check path is /healthstatus
-Register Nginx Instances as targets
+Ensure the protocol is TCP on port 22
+Register Bastion Instances as targets
 Ensure that health check passes for the target group
-Configure Autoscaling For Nginx
+
+### Configure Autoscaling For Bastion
 Select the right launch template
 Select the VPC
 Select both public subnets
@@ -493,3 +506,20 @@ Minimum capacity is 2
 Maximum capacity is 4
 Set scale out if CPU utilization reaches 90%
 Ensure there is an SNS topic to send scaling notifications
+
+### WEBSERVER
+______
+
+### Prepare Launch Template For Webservers (wordpress and tooling) (One per subnet)
+1. Make use of the AMI to set up a launch template
+1. Ensure the Instances are launched into a public subnet
+1. Assign appropriate security group
+1. Configure Userdata to update yum package repository and install wordpress **(Only required on the WordPress launch template)** 
+
+![Alt text](1.launch-template-wordpress.png) 
+
+![Alt text](1.launch-template-wordpress1.png) 
+
+![Alt text](1.launch-template-wordpress2.png)
+
+![Alt text](1.launch-template-tooling.png)
