@@ -387,6 +387,9 @@ esq:wq
 ![Alt text](1.target-grp-nginx.png)
 ![Alt text](1.target-grp-nginx2.png)
 ![Alt text](1.target-grp-nginx3.png)
+
+Using same approach above, configure target group for Wordpress and Tooling
+
 ![Alt text](1.target-grp-created.png)
 
 
@@ -473,6 +476,16 @@ Maximum capacity is 4
 Set scale out if CPU utilization reaches 90%
 Ensure there is an SNS topic to send scaling notifications
 
+![Alt text](1.autoscaling-nginx.png) 
+
+![Alt text](1.autoscaling-nginx1.png) 
+
+![Alt text](1.autoscaling-nginx2.png) 
+
+![Alt text](1.autoscaling-nginx3.png)
+
+
+
 ### BASTION 
 _____
 
@@ -484,12 +497,6 @@ Configure Userdata to update yum package repository and install Ansible and git
 
 ### Configure Target Groups
 1.Select Instances as the target type
-Ensure the protocol is TCP on port 22
-Register Bastion Instances as targets
-Ensure that health check passes for the target group
-
-### Configure Target Groups
-Select Instances as the target type
 Ensure the protocol is TCP on port 22
 Register Bastion Instances as targets
 Ensure that health check passes for the target group
@@ -507,6 +514,16 @@ Maximum capacity is 4
 Set scale out if CPU utilization reaches 90%
 Ensure there is an SNS topic to send scaling notifications
 
+
+![Alt text](1.autoscaling-bastion.png) 
+
+![Alt text](1.autoscaling-bastion2.png) 
+
+![Alt text](1.autoscaling-bastion1.png) 
+
+![Alt text](1.autoscaling-bastion3.png)
+
+
 ### WEBSERVER
 ______
 
@@ -523,3 +540,40 @@ ______
 ![Alt text](1.launch-template-wordpress2.png)
 
 ![Alt text](1.launch-template-tooling.png)
+
+Configure  Autoscaling group for the 2 webservers (Toling and Wordpress) in the private subnet attaching their respective Launch template
+
+![Alt text](1.autoscaling-created.png)
+
+### Create Database
+
+Create *toolingdb* and *wordpressdb* in  your (already created) RDB
+
+here, we will login to our database from the bastion using the ssh agent 
+
+```
+eval $(ssh-agent -s) or eval `ssh-sgent -s`
+
+```
+
+and log into MysQL.
+
+mysql -h hostname -u username -p and specifying the parameters 
+ use hostname as RBD endpoint and username as (your_username) and input password
+
+ ![Alt text](1.rds-endpoint.png)
+
+ ![Alt text](1.ssh-and-createdb.png)
+
+
+### Configuring DNS with Route53
+We have earlier registered a free domain with a domain name registry and configured a hosted zone in Route53. But that is not all that needs to be done as far as DNS configuration is concerned.
+
+You need to ensure that the main domain for the WordPress website can be reached, and the subdomain for Tooling website can also be reached using a browser.
+
+Create other records such as CNAME, alias and A records.
+
+NOTE: You can use either CNAME or alias records to achieve the same thing. But alias record has better functionality because it is a faster to resolve DNS record, and can coexist with other records on that name. Read here to get to know more about the differences.
+
+Create an alias record for the root domain and direct its traffic to the ALB DNS name.
+Create an alias record for tooling.<yourdomain>.com and direct its traffic to the ALB DNS name.
