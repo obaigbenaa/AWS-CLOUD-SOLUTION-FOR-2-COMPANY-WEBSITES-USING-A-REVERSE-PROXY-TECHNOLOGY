@@ -577,3 +577,10 @@ NOTE: You can use either CNAME or alias records to achieve the same thing. But a
 
 Create an alias record for the root domain and direct its traffic to the ALB DNS name.
 Create an alias record for tooling.<yourdomain>.com and direct its traffic to the ALB DNS name.
+
+# configuration files
+
+[See configuration files here](https://github.com/obaigbenaa/ALDERS-project-config)
+
+
+
