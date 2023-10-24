@@ -5,7 +5,8 @@ As part of the company’s desire for improved security and performance, a decis
 
 Cost, Security, and Scalability are the major requirements for this project. Hence, implementing the **architecture designed below**, ensures that the infrastructure for both websites (WordPress and Tooling) is resilient to Web Server’s failures, can accommodate to increased traffic and, at the same time, has reasonable cost.
 
-![Alt text](1.aws-multiple-architecture.png)
+![Alt text](Images/1.aws-multiple-architecture.png)
+
 
 #### SET UP A VIRTUAL PRIVATE NETWORK (VPC)
 
@@ -13,25 +14,25 @@ Ensure to always make reference to the architectural diagram and ensure that you
 
 1. Create a VPC and enable DNS hostname
 
-![Alt text](1.create-vpc.png)
+![Alt text](Images/1.create-vpc.png)
 
-![Alt text](1.create-vpc3.png)
+![Alt text](Images/1.create-vpc3.png)
 
-![Alt text](2.enable-DNS-hostname.png)
+![Alt text](Images/2.enable-DNS-hostname.png)
 
 2. Create an Internet Gateway (*igw*)
 
-![Alt text](2.create-igw.png)
+![Alt text](Images/2.create-igw.png)
 
-![Alt text](2.create-igw2.png)
+![Alt text](Images/2.create-igw2.png)
 
 3. Create subnets as shown in the architecture
 
-![Alt text](2.create-subnet.png)
+![Alt text](Images/2.create-subnet.png)
 
-![Alt text](2.create-subnet1.png)
+![Alt text](Images/2.create-subnet1.png)
 
-![Alt text](2.create-subnet2.png)
+![Alt text](Images/2.create-subnet2.png)
 
 so far, we now have 2 public subnets and 4 private subnets
 
@@ -39,33 +40,33 @@ so far, we now have 2 public subnets and 4 private subnets
 
 create route table for public and private subnets
 
-![Alt text](1.create-rtb.png)
+![Alt text](Images/1.create-rtb.png)
 
 
 5. Create a route table and associate it with the private subnets
 
-![Alt text](1.associate-rtb.png)
+![Alt text](Images/1.associate-rtb.png)
 
-![Alt text](1.associate-rtb2.png)
+![Alt text](Images/1.associate-rtb2.png)
 
-![Alt text](1.associate-rtb3.png)
+![Alt text](Images/1.associate-rtb3.png)
 
 
 
 6. Edit a route in public route table, and associate it with the Internet Gateway. (This is what allows a public subnet to be accisble from the Internet)
 Note: that the route in the private route table will only be edited and associaated with the NAT Gateway.
 
-![Alt text](1.edit-routes.png)
+![Alt text](Images/1.edit-routes.png)
 
-![Alt text](1.edit-routes2.png)
+![Alt text](Images/1.edit-routes2.png)
 
 7. Create 3 Elastic IPs
 
-![Alt text](1.allocate-eip.png)
+![Alt text](Images/1.allocate-eip.png)
 
 8. Create a Nat Gateway and assign one of the Elastic IPs (*The other 2 will be used by Bastion hosts)
 
-![Alt text](1.nat-gateway-eip-attatch.png)
+![Alt text](Images/1.nat-gateway-eip-attatch.png)
 
 9. Create a Security Group for:
 
@@ -83,7 +84,7 @@ Note: that the route in the private route table will only be edited and associaa
 
 The Bastion server will also need to have ssh access to the database
 
-![Alt text](1.all-security-grps.png)
+![Alt text](Images/1.all-security-grps.png)
 
 
 #### TLS Certificates From Amazon Certificate Manager (ACM)
@@ -91,7 +92,7 @@ You will need TLS certificates to handle secured connectivity to your Applicatio
 
 - Navigate to AWS ACM
 
-![Alt text](1.aws-certificate-manager.png)
+![Alt text](Images/1.aws-certificate-manager.png)
 
 - Request a public wildcard certificate for the domain name you registered in any prefered domain name registry
 
@@ -100,15 +101,15 @@ You will need TLS certificates to handle secured connectivity to your Applicatio
 - Tag the resource
 
 
-![Alt text](1.aws-certificate-manager2.png)
+![Alt text](Images/1.aws-certificate-manager2.png)
 
-![Alt text](1.aws-certificate-manager3.png)
+![Alt text](Images/1.aws-certificate-manager3.png)
 
-![Alt text](1.aws-certificate-manager4.png)
+![Alt text](Images/1.aws-certificate-manager4.png)
 
-![Alt text](1.aws-certificate-manager-issued.png)
+![Alt text](Images/1.aws-certificate-manager-issued.png)
 
-![Alt text](1.aws-certificate-manager-issued2.png)
+![Alt text](Images/1.aws-certificate-manager-issued2.png)
 
 CREATE AND SETUP EFS
 
@@ -116,33 +117,33 @@ Amazon Elastic File System (Amazon EFS) provides a simple, scalable, fully manag
 
 1. Create an EFS filesystem
 
-![Alt text](1.efs-create.png)
+![Alt text](Images/1.efs-create.png)
 
-![Alt text](1.efs-create1.png)
+![Alt text](Images/1.efs-create1.png)
 
 2. Create an EFS mount target per AZ in the VPC, associate it with both subnets dedicated for data layer
 
 3. Associate the Security groups created earlier for data layer.
 
-![Alt text](1.efs-create2.png)
+![Alt text](Images/1.efs-create2.png)
 
 4. Create an EFS access point. (Give it a name and leave all other settings as default)
 
-![Alt text](1.efs-create-accesspoint.png)
+![Alt text](Images/1.efs-create-accesspoint.png)
 
-![Alt text](1.efs-create-accesspoint2.png)
+![Alt text](Images/1.efs-create-accesspoint2.png)
 
-![Alt text](1.efs-create-accesspoint3.png)
+![Alt text](Images/1.efs-create-accesspoint3.png)
 
 
 #### Setup Relational Databaser Service
 * ##### Pre-requisite. ~ Create a KMS key from Key Management Service (KMS) to be used to encrypt the database instance.
 
-![Alt text](1.kms-create.png) 
+![Alt text](Images/1.kms-create.png) 
 
-![Alt text](1.kms-create1.png) 
+![Alt text](Images/1.kms-create1.png) 
 
-![Alt text](1.kms-create2.png)
+![Alt text](Images/1.kms-create2.png)
 
 
 Amazon Relational Database Service (Amazon RDS) is a managed distributed relational database service by Amazon Web Services. This web service running in the cloud designed to simplify setup, operations, maintenans & scaling of relational databases. Without RDS, Database Administrators (DBA) have more work to do, due to RDS, some DBAs have become jobless
@@ -152,9 +153,9 @@ To ensure that yout databases are highly available and also have failover suppor
 To configure RDS, follow steps below:
 
 1. Create a subnet group and add 2 private subnets (data Layer)
-![Alt text](1.subnet-group.png) 
+![Alt text](Images/1.subnet-group.png) 
 
-![Alt text](1.subnet-group1.png)
+![Alt text](Images/1.subnet-group1.png)
 
 2. Create an RDS Instance for mysql 8.*.*
 
@@ -165,15 +166,15 @@ To configure RDS, follow steps below:
 7. Encrypt the database using the KMS key created earlier
 8. Enable CloudWatch monitoring and export Error and Slow Query logs (for production, also include Audit)
 
-![Alt text](1.database-ceate.png) 
+![Alt text](Images/1.database-ceate.png) 
 
-![Alt text](1.database-ceate1.png) 
+![Alt text](Images/1.database-ceate1.png) 
 
-![Alt text](1.database-ceate3.png) 
+![Alt text](Images/1.database-ceate3.png) 
 
-![Alt text](1.database-ceate4.png)
+![Alt text](Images/1.database-ceate4.png)
 
-![Alt text](1.database-ceate5.png)
+![Alt text](Images/1.database-ceate5.png)
 
 ### Proceed With Creation of Compute Resources
 
@@ -226,7 +227,7 @@ systemctl enable chronyd
 
 #### Create an AMI out of the Bastion EC2 instance
 
-![Alt text](1.ami-create-bastion.png)
+![Alt text](Images/1.ami-create-bastion.png)
 
 Go to navigation pane and check that thee AMI status is available
 
@@ -374,7 +375,7 @@ esq:wq
 
 ##### Create an AMI out of the Webserver EC2 instance
 
-![Alt text](1.ami-created.png)
+![Alt text](Images/1.ami-created.png)
 
 
 ### Configure Target Groups
@@ -384,13 +385,13 @@ esq:wq
 1. Register Nginx Instances as targets
 1. Ensure that health check passes for the target group
 
-![Alt text](1.target-grp-nginx.png)
-![Alt text](1.target-grp-nginx2.png)
-![Alt text](1.target-grp-nginx3.png)
+![Alt text](Images/1.target-grp-nginx.png)
+![Alt text](Images/1.target-grp-nginx2.png)
+![Alt text](Images/1.target-grp-nginx3.png)
 
 Using same approach above, configure target group for Wordpress and Tooling
 
-![Alt text](1.target-grp-created.png)
+![Alt text](Images/1.target-grp-created.png)
 
 
 ### CONFIGURE APPLICATION LOAD BALANCER (ALB)
@@ -418,25 +419,25 @@ To solve this problem, we must use a load balancer. But this time, it will be an
 * Select webserver Instances as the target group
 * Ensure that health check passes for the target group - NOTE: This process must be repeated for both *WordPress* and *Tooling* websites.
 
-![Alt text](1.loadbalancer-create.png) 
+![Alt text](Images/1.loadbalancer-create.png) 
 
-![Alt text](1.loadbalancer-create1.png)
+![Alt text](Images/1.loadbalancer-create1.png)
 
-![Alt text](1.loadbalancer-create2.png) 
+![Alt text](Images/1.loadbalancer-create2.png) 
 
-![Alt text](1.loadbalancer-create3.png)
+![Alt text](Images/1.loadbalancer-create3.png)
 
 Configure HTTPS listeners rule for Internal ALB
 
-![Alt text](1.add-rule-lb-listener.png) 
+![Alt text](Images/1.add-rule-lb-listener.png) 
 
-![Alt text](1.add-rule-lb-listener1.png) 
+![Alt text](Images/1.add-rule-lb-listener1.png) 
 
-![Alt text](1.add-rule-lb-listener3.png) 
+![Alt text](Images/1.add-rule-lb-listener3.png) 
 
-![Alt text](1.add-rule-lb-listener4.png)
+![Alt text](Images/1.add-rule-lb-listener4.png)
 
-![Alt text](1.add-rule-lb-listener-created.png)
+![Alt text](Images/1.add-rule-lb-listener-created.png)
 
 ### NGINX
 ____
@@ -448,11 +449,11 @@ ____
 1. Configure Userdata to update yum package repository and install nginx. 
 See [Nginx userdata](https://github.com/obaigbenaa/ALDERS-project-config/blob/main/nginx-userdata.md)
 
-![Alt text](1.launch-template-create.png) 
+![Alt text](Images/1.launch-template-create.png) 
 
-![Alt text](1.launch-template-create1.png) 
+![Alt text](Images/1.launch-template-create1.png) 
 
-![Alt text](1.launch-template-create2.png)
+![Alt text](Images/1.launch-template-create2.png)
 
 
 ### Configure Target Groups
@@ -476,13 +477,13 @@ Maximum capacity is 4
 Set scale out if CPU utilization reaches 90%
 Ensure there is an SNS topic to send scaling notifications
 
-![Alt text](1.autoscaling-nginx.png) 
+![Alt text](Images/1.autoscaling-nginx.png) 
 
-![Alt text](1.autoscaling-nginx1.png) 
+![Alt text](Images/1.autoscaling-nginx1.png) 
 
-![Alt text](1.autoscaling-nginx2.png) 
+![Alt text](Images/1.autoscaling-nginx2.png) 
 
-![Alt text](1.autoscaling-nginx3.png)
+![Alt text](Images/1.autoscaling-nginx3.png)
 
 
 
@@ -515,13 +516,13 @@ Set scale out if CPU utilization reaches 90%
 Ensure there is an SNS topic to send scaling notifications
 
 
-![Alt text](1.autoscaling-bastion.png) 
+![Alt text](Images/1.autoscaling-bastion.png) 
 
-![Alt text](1.autoscaling-bastion2.png) 
+![Alt text](Images/1.autoscaling-bastion2.png) 
 
-![Alt text](1.autoscaling-bastion1.png) 
+![Alt text](Images/1.autoscaling-bastion1.png) 
 
-![Alt text](1.autoscaling-bastion3.png)
+![Alt text](Images/1.autoscaling-bastion3.png)
 
 
 ### WEBSERVER
@@ -533,17 +534,17 @@ ______
 1. Assign appropriate security group
 1. Configure Userdata to update yum package repository and install wordpress **(Only required on the WordPress launch template)** 
 
-![Alt text](1.launch-template-wordpress.png) 
+![Alt text](Images/1.launch-template-wordpress.png) 
 
-![Alt text](1.launch-template-wordpress1.png) 
+![Alt text](Images/1.launch-template-wordpress1.png) 
 
-![Alt text](1.launch-template-wordpress2.png)
+![Alt text](Images/1.launch-template-wordpress2.png)
 
-![Alt text](1.launch-template-tooling.png)
+![Alt text](Images/1.launch-template-tooling.png)
 
 Configure  Autoscaling group for the 2 webservers (Toling and Wordpress) in the private subnet attaching their respective Launch template
 
-![Alt text](1.autoscaling-created.png)
+![Alt text](Images/1.autoscaling-created.png)
 
 ### Create Database
 
@@ -561,9 +562,9 @@ and log into MysQL.
 mysql -h hostname -u username -p and specifying the parameters 
  use hostname as RBD endpoint and username as (your_username) and input password
 
- ![Alt text](1.rds-endpoint.png)
+ ![Alt text](Images/1.rds-endpoint.png)
 
- ![Alt text](1.ssh-and-createdb.png)
+ ![Alt text](Images/1.ssh-and-createdb.png)
 
 
 ### Configuring DNS with Route53
@@ -580,7 +581,5 @@ Create an alias record for tooling.<yourdomain>.com and direct its traffic to th
 
 # configuration files
 
-[See configuration files here](https://github.com/obaigbenaa/ALDERS-project-config)
-
-
+[See configuration files](https://github.com/obaigbenaa/ALDERS-project-config)
 
